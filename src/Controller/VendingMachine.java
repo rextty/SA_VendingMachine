@@ -1,15 +1,11 @@
 package Controller;
 
-import Model.Sensor.MoneyInterface;
 import Model.Sensor.MoneySensor;
 import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
 import View.MachineGUI;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-public class VendingMachine implements ActionListener, MoneyInterface {
+public class VendingMachine{
 
     private MachineGUI machineGUI;
 
@@ -32,41 +28,44 @@ public class VendingMachine implements ActionListener, MoneyInterface {
     }
 
     public void init() {
-        this.machineGUI.getPut1NTDButton().setActionCommand(ONE_NTD);
-        this.machineGUI.getPut5NTDButton().setActionCommand(FIVE_NTD);
-        this.machineGUI.getPut10NTDButton().setActionCommand(TEN_NTD);
-        this.machineGUI.getPut50NTDButton().setActionCommand(FIF_NTD);
-        this.machineGUI.getPut100NTDButton().setActionCommand(ONE_HUNDRED_NTD);
-        this.machineGUI.getPut500NTDButton().setActionCommand(FIVE_HUNDRED_NTD);
-        this.machineGUI.getPut1000NTDButton().setActionCommand(ONE_THOUSAND_NTD);
 
-        this.machineGUI.getPut1NTDButton().addActionListener(this);
-        this.machineGUI.getPut5NTDButton().addActionListener(this);
-        this.machineGUI.getPut10NTDButton().addActionListener(this);
-        this.machineGUI.getPut50NTDButton().addActionListener(this);
-        this.machineGUI.getPut100NTDButton().addActionListener(this);
-        this.machineGUI.getPut500NTDButton().addActionListener(this);
-        this.machineGUI.getPut1000NTDButton().addActionListener(this);
+        this.machineGUI.getPut1NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(1);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut5NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(5);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut10NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(10);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut50NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(50);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut100NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(100);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut500NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(500);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
+
+        this.machineGUI.getPut1000NTDButton().addActionListener(e -> {
+            moneySensor.addAmount(1000);
+            this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        });
     }
 
     public void startView() {
         machineGUI.setVisible(true);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-
-        switch (command) {
-            case ONE_NTD -> moneySensor.addAmount(1);
-            case FIVE_NTD -> moneySensor.addAmount(5);
-            case TEN_NTD -> moneySensor.addAmount(10);
-            case FIF_NTD -> moneySensor.addAmount(50);
-            case ONE_HUNDRED_NTD -> moneySensor.addAmount(100);
-            case FIVE_HUNDRED_NTD -> moneySensor.addAmount(500);
-            case ONE_THOUSAND_NTD -> moneySensor.addAmount(1000);
-        }
-
-        this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
     }
 }
