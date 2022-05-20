@@ -1,8 +1,10 @@
 package Controller;
 
+import Model.Entity.Product;
 import Model.Sensor.MoneySensor;
 import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
+import Model.Service.ProductService;
 import View.MachineGUI;
 import com.jgoodies.forms.layout.FormLayout;
 
@@ -12,6 +14,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class VendingMachine{
 
@@ -22,6 +25,8 @@ public class VendingMachine{
     private final ProductSensor productSensor;
 
     private final TemperatureSensor temperatureSensor;
+
+    private ProductService productService;
 
     public VendingMachine(
             MachineGUI _gui,
@@ -36,6 +41,8 @@ public class VendingMachine{
     }
 
     public void init() {
+        productService = new ProductService();
+
         // 綁定投幣按鈕事件
         bingPutCoinListener();
 
@@ -166,14 +173,26 @@ public class VendingMachine{
             JPanel rowPanel = new JPanel();
             rowPanel.setLayout(new GridBagLayout());
 
-            BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\src\\Resource\\DiscordIcon.png"));
+            BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\Resource\\DiscordIcon.png"));
 
-            JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
+//            JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
+            JLabel productItem = new JLabel();
             JLabel productName = new JLabel();
-            productName.setText("123123");
+            JLabel productPrice = new JLabel();
+            JLabel productQuantity = new JLabel();
+
+            List<Product> productList = productService.getAllProduct();
+
+            for (Product product : productList) {
+                productName.setText(product.getName());
+                productPrice.setText(Integer.toString(product.getPrice()));
+                productQuantity.setText(Integer.toString(product.getQuantity()));
+            }
 
             rowPanel.add(productItem);
             rowPanel.add(productName);
+            rowPanel.add(productPrice);
+            rowPanel.add(productQuantity);
 
             columnPanel.add(rowPanel);
 
