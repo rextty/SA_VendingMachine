@@ -13,6 +13,7 @@ public class Main {
         TemperatureSensor temperatureSensor = new TemperatureSensor();
 
         VendingMachine controller = new VendingMachine(gui, moneySensor, productSensor, temperatureSensor);
+
         controller.startView();
         controller.init();
     }
