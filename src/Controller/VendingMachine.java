@@ -4,9 +4,14 @@ import Model.Sensor.MoneySensor;
 import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
 import View.MachineGUI;
+import com.jgoodies.forms.layout.FormLayout;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class VendingMachine{
 
@@ -31,100 +36,111 @@ public class VendingMachine{
     }
 
     public void init() {
-
         // 綁定投幣按鈕事件
-        this.machineGUI.getPut1NTDButton().addActionListener(e -> {
+        bingPutCoinListener();
+
+        // 綁定商品按鈕事件
+        bindProductSelectorListener();
+
+        // 初始化商品頁面
+        initProductPanel();
+    }
+
+    private void bingPutCoinListener() {
+        machineGUI.getPut1NTDButton().addActionListener(e -> {
             moneySensor.addAmount(1);
             updateAmount();
         });
 
-        this.machineGUI.getPut5NTDButton().addActionListener(e -> {
+        machineGUI.getPut5NTDButton().addActionListener(e -> {
             moneySensor.addAmount(5);
             updateAmount();
         });
 
-        this.machineGUI.getPut10NTDButton().addActionListener(e -> {
+        machineGUI.getPut10NTDButton().addActionListener(e -> {
             moneySensor.addAmount(10);
             updateAmount();
         });
 
-        this.machineGUI.getPut50NTDButton().addActionListener(e -> {
+        machineGUI.getPut50NTDButton().addActionListener(e -> {
             moneySensor.addAmount(50);
             updateAmount();
         });
 
-        this.machineGUI.getPut100NTDButton().addActionListener(e -> {
+        machineGUI.getPut100NTDButton().addActionListener(e -> {
             moneySensor.addAmount(100);
             updateAmount();
         });
 
-        this.machineGUI.getPut500NTDButton().addActionListener(e -> {
+        machineGUI.getPut500NTDButton().addActionListener(e -> {
             moneySensor.addAmount(500);
             updateAmount();
         });
 
-        this.machineGUI.getPut1000NTDButton().addActionListener(e -> {
+        machineGUI.getPut1000NTDButton().addActionListener(e -> {
             moneySensor.addAmount(1000);
             updateAmount();
         });
 
-        this.machineGUI.getRefundButton().addActionListener(e -> {
+        machineGUI.getRefundButton().addActionListener(e -> {
             moneySensor.setAmount(0);
             updateAmount();
         });
 
-        // 綁定商品按鈕事件
-        this.machineGUI.getA1Button().addActionListener(e -> {
+    }
+
+    private void bindProductSelectorListener() {
+        machineGUI.getA1Button().addActionListener(e -> {
             productSensor.addProductId("1");
             updateProductId();
         });
 
-        this.machineGUI.getA2Button().addActionListener(e -> {
+        machineGUI.getA2Button().addActionListener(e -> {
             productSensor.addProductId("2");
             updateProductId();
         });
 
-        this.machineGUI.getA3Button().addActionListener(e -> {
+        machineGUI.getA3Button().addActionListener(e -> {
             productSensor.addProductId("3");
             updateProductId();
         });
 
-        this.machineGUI.getA4Button().addActionListener(e -> {
+        machineGUI.getA4Button().addActionListener(e -> {
             productSensor.addProductId("4");
             updateProductId();
         });
 
-        this.machineGUI.getA5Button().addActionListener(e -> {
+        machineGUI.getA5Button().addActionListener(e -> {
             productSensor.addProductId("5");
             updateProductId();
         });
 
-        this.machineGUI.getA6Button().addActionListener(e -> {
+        machineGUI.getA6Button().addActionListener(e -> {
             productSensor.addProductId("6");
             updateProductId();
         });
 
-        this.machineGUI.getA7Button().addActionListener(e -> {
+        machineGUI.getA7Button().addActionListener(e -> {
             productSensor.addProductId("7");
             updateProductId();
         });
 
-        this.machineGUI.getA8Button().addActionListener(e -> {
+        machineGUI.getA8Button().addActionListener(e -> {
             productSensor.addProductId("8");
             updateProductId();
         });
 
-        this.machineGUI.getA9Button().addActionListener(e -> {
+        machineGUI.getA9Button().addActionListener(e -> {
             productSensor.addProductId("9");
             updateProductId();
         });
 
-        this.machineGUI.getA0Button().addActionListener(e -> {
+        machineGUI.getA0Button().addActionListener(e -> {
             productSensor.addProductId("0");
             updateProductId();
         });
 
-        this.machineGUI.getDeleteButton().addActionListener(e -> {
+        machineGUI.getDeleteButton().addActionListener(e -> {
             String productId = productSensor.getProductId();
 
             if (productId.length() == 0) {
@@ -135,9 +151,38 @@ public class VendingMachine{
             updateProductId();
         });
 
-        this.machineGUI.getConfirmButton().addActionListener(e -> {
+        machineGUI.getConfirmButton().addActionListener(e -> {
             setPanelEnabled(machineGUI.getRightPanel(), false);
         });
+    }
+
+    private void initProductPanel() {
+        try {
+            JPanel productPanel = machineGUI.getProductPanel();
+
+            JPanel columnPanel = new JPanel();
+            columnPanel.setLayout(new GridBagLayout());
+
+            JPanel rowPanel = new JPanel();
+            rowPanel.setLayout(new GridBagLayout());
+
+            BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\src\\Resource\\DiscordIcon.png"));
+
+            JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
+            JLabel productName = new JLabel();
+            productName.setText("123123");
+
+            rowPanel.add(productItem);
+            rowPanel.add(productName);
+
+            columnPanel.add(rowPanel);
+
+            productPanel.add(columnPanel);
+
+            updateView();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
@@ -155,14 +200,20 @@ public class VendingMachine{
 
     // 更新畫面金額
     public void updateAmount() {
-        this.machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
     }
 
     public void updateProductId() {
-        this.machineGUI.getProductIdLabel().setText(productSensor.getProductId());
+        machineGUI.getProductIdLabel().setText(productSensor.getProductId());
+    }
+
+    public void updateView() {
+        machineGUI.validate();
+        machineGUI.repaint();
     }
 
     public void startView() {
+        machineGUI.setSize(1000, 500);
         machineGUI.setVisible(true);
     }
 }

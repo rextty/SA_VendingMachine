@@ -27,6 +27,8 @@ public class MachineGUI extends JFrame {
     private JButton a9Button;
     private JButton a0Button;
     private JButton confirmButton;
+    private JPanel LeftPanel;
+    private JPanel productPanel;
 
     public MachineGUI(String title) {
         super(title);
@@ -42,6 +44,10 @@ public class MachineGUI extends JFrame {
 
     public JPanel getRightPanel() {
         return RightPanel;
+    }
+
+    public JPanel getProductPanel() {
+        return productPanel;
     }
 
     public JButton getPut1NTDButton() {
