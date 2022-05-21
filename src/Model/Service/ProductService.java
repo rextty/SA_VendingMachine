@@ -41,4 +41,39 @@ public class ProductService {
             throw new RuntimeException(e);
         }
     }
+
+    public Product getProductByProductId(String productId) {
+        String query = "SELECT * FROM vending_machine.product WHERE `productId` = " + productId + ";";
+
+        try {
+            ResultSet resultSet = jdbc_connect.getConnection().createStatement().executeQuery(query);
+
+            Product product = new Product();
+
+            if (resultSet.next()) {
+                product.setProductId(resultSet.getString("productId"));
+                product.setQuantity(resultSet.getInt("quantity"));
+                product.setPrice(resultSet.getInt("price"));
+                product.setName(resultSet.getString("name"));
+                product.setImage(resultSet.getString("image"));
+            }
+
+            return product;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateProductQuantityByProductId(String productId, int quantity) {
+        String query = String.format(
+                "UPDATE vending_machine.product " +
+                "SET quantity = %s " +
+                "WHERE productId = %s;", quantity, productId);
+
+        try {
+            jdbc_connect.getConnection().createStatement().executeUpdate(query);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

@@ -68,6 +68,7 @@ public class VendingMachine{
         initProductPanel();
     }
 
+    // 投幣事件
     private void bingPutCoinListener() {
         machineGUI.getPut1NTDButton().addActionListener(e -> {
             moneySensor.addAmount(1);
@@ -111,6 +112,7 @@ public class VendingMachine{
 
     }
 
+    // 選擇商品事件
     private void bindProductSelectorListener() {
         machineGUI.getA1Button().addActionListener(e -> {
             productSensor.addProductId("1");
@@ -174,10 +176,33 @@ public class VendingMachine{
         });
 
         machineGUI.getConfirmButton().addActionListener(e -> {
+            String productId = machineGUI.getProductIdLabel().getText();
+            int productPrice = productService.getProductByProductId(productId).getPrice();
+
+            if (moneySensor.getAmount() < productPrice) {
+                JOptionPane.showMessageDialog(null, "Insufficient amount");
+                return;
+            }
+
+            moneySensor.setAmount(moneySensor.getAmount() - productPrice);
+            updateAmount();
+
             setPanelEnabled(machineGUI.getRightPanel(), false);
+            buyProduct(productId);
         });
     }
 
+    // 購買商品
+    private void buyProduct(String productId) {
+        int productQuantity = productService.getProductByProductId(productId).getQuantity() - 1;
+        productService.updateProductQuantityByProductId(productId, productQuantity);
+        JOptionPane.showMessageDialog(null, "Success.");
+        productSensor.setProductId("");
+        machineGUI.getProductIdLabel().setText("");
+        setPanelEnabled(machineGUI.getRightPanel(), true);
+    }
+
+    // 商品換頁事件
     private void bindPageSwitcherListener() {
         machineGUI.getPrePageButton().addActionListener(e -> {
             currentPage--;
@@ -210,6 +235,7 @@ public class VendingMachine{
         });
     }
 
+    // 初始化商品頁面
     private void initProductPanel() {
         List<Product> productList = productService.getAllProduct();
 
@@ -219,6 +245,7 @@ public class VendingMachine{
         updateProductPanel(startPage, endPage);
     }
 
+    // 更新商品頁面
     private void updateProductPanel(int start, int end) {
         try {
             int temp = 0;
@@ -276,6 +303,7 @@ public class VendingMachine{
         }
     }
 
+    // 更新頁面狀態
     private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
         panel.setEnabled(isEnabled);
 
@@ -289,24 +317,29 @@ public class VendingMachine{
         }
     }
 
+    // 更新商品頁數
     private void updatePageSwitcher() {
         JLabel pageLabel = machineGUI.getPageLabel();
         pageLabel.setText(currentPage + "/"+ maxPage);
     }
 
+    // 更新投入金額
     public void updateAmount() {
         machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
     }
 
+    // 更新選擇商品編號
     public void updateProductId() {
         machineGUI.getProductIdLabel().setText(productSensor.getProductId());
     }
 
+    // 更新畫面
     public void updateView() {
         machineGUI.validate();
         machineGUI.repaint();
     }
 
+    // 顯示販賣機畫面
     public void startView() {
         machineGUI.setSize(550, 400);
         machineGUI.setVisible(true);
