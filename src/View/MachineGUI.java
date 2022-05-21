@@ -29,9 +29,17 @@ public class MachineGUI extends JFrame {
     private JButton confirmButton;
     private JPanel LeftPanel;
     private JPanel productPanel;
+    private JPanel topProductPanel;
+    private JPanel middleProductPanel;
+    private JPanel bottomProductPanel;
+    private JButton prePageButton;
+    private JButton nextPageButton;
+    private JLabel pageLabel;
 
     public MachineGUI(String title) {
         super(title);
+
+        //TODO: 商品頁面切九宮格
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setContentPane(mainPanel);
@@ -44,10 +52,6 @@ public class MachineGUI extends JFrame {
 
     public JPanel getRightPanel() {
         return RightPanel;
-    }
-
-    public JPanel getProductPanel() {
-        return productPanel;
     }
 
     public JButton getPut1NTDButton() {
@@ -132,5 +136,33 @@ public class MachineGUI extends JFrame {
 
     public JButton getConfirmButton() {
         return confirmButton;
+    }
+
+    public JPanel getProductPanel() {
+        return productPanel;
+    }
+
+    public JPanel getTopProductPanel() {
+        return topProductPanel;
+    }
+
+    public JPanel getMiddleProductPanel() {
+        return middleProductPanel;
+    }
+
+    public JPanel getBottomProductPanel() {
+        return bottomProductPanel;
+    }
+
+    public JButton getPrePageButton() {
+        return prePageButton;
+    }
+
+    public JLabel getPageLabel() {
+        return pageLabel;
+    }
+
+    public JButton getNextPageButton() {
+        return nextPageButton;
     }
 }

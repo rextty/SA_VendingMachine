@@ -6,7 +6,6 @@ import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
 import Model.Service.ProductService;
 import View.MachineGUI;
-import com.jgoodies.forms.layout.FormLayout;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -28,6 +27,14 @@ public class VendingMachine{
 
     private ProductService productService;
 
+    private int currentPage;
+
+    private int maxPage;
+
+    private int startPage;
+
+    private int endPage;
+
     public VendingMachine(
             MachineGUI _gui,
             MoneySensor moneySensor,
@@ -41,6 +48,11 @@ public class VendingMachine{
     }
 
     public void init() {
+        currentPage = 1;
+
+        startPage = 0;
+        endPage = 9;
+
         productService = new ProductService();
 
         // 綁定投幣按鈕事件
@@ -48,6 +60,9 @@ public class VendingMachine{
 
         // 綁定商品按鈕事件
         bindProductSelectorListener();
+
+        // 綁定切頁按鈕事件
+        bindPageSwitcherListener();
 
         // 初始化商品頁面
         initProductPanel();
@@ -163,42 +178,99 @@ public class VendingMachine{
         });
     }
 
+    private void bindPageSwitcherListener() {
+        machineGUI.getPrePageButton().addActionListener(e -> {
+            currentPage--;
+            updatePageSwitcher();
+
+            if (currentPage == 1) {
+                machineGUI.getPrePageButton().setEnabled(false);
+            }
+
+            startPage -= 9;
+            endPage -= 9;
+
+            machineGUI.getNextPageButton().setEnabled(true);
+            updateProductPanel(startPage, endPage);
+        });
+
+        machineGUI.getNextPageButton().addActionListener(e -> {
+            currentPage ++;
+            updatePageSwitcher();
+
+            if (currentPage == maxPage) {
+                machineGUI.getNextPageButton().setEnabled(false);
+            }
+
+            startPage += 9;
+            endPage += 9;
+
+            machineGUI.getPrePageButton().setEnabled(true);
+            updateProductPanel(startPage, endPage);
+        });
+    }
+
     private void initProductPanel() {
+        List<Product> productList = productService.getAllProduct();
+
+        maxPage = (int) Math.ceil(productList.size() / 9.0);
+
+        updatePageSwitcher();
+        updateProductPanel(startPage, endPage);
+    }
+
+    private void updateProductPanel(int start, int end) {
         try {
-            JPanel productPanel = machineGUI.getProductPanel();
+            int temp = 0;
 
-            JPanel columnPanel = new JPanel();
-            columnPanel.setLayout(new GridBagLayout());
+            JPanel topProductPanel = machineGUI.getTopProductPanel();
+            JPanel middleProductPanel = machineGUI.getMiddleProductPanel();
+            JPanel bottomProductPanel = machineGUI.getBottomProductPanel();
 
-            JPanel rowPanel = new JPanel();
-            rowPanel.setLayout(new GridBagLayout());
-
-            BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\Resource\\DiscordIcon.png"));
-
-//            JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
-            JLabel productItem = new JLabel();
-            JLabel productName = new JLabel();
-            JLabel productPrice = new JLabel();
-            JLabel productQuantity = new JLabel();
+            topProductPanel.removeAll();
+            middleProductPanel.removeAll();
+            bottomProductPanel.removeAll();
 
             List<Product> productList = productService.getAllProduct();
 
-            for (Product product : productList) {
-                productName.setText(product.getName());
-                productPrice.setText(Integer.toString(product.getPrice()));
-                productQuantity.setText(Integer.toString(product.getQuantity()));
+            for (int i = start; i <= end; i++) {
+                if (i >= productList.size()) {
+                    updateView();
+                    return;
+                }
+
+                JPanel itemPanel = new JPanel();
+                itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
+
+                BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\Resource\\DiscordIcon.png"));
+
+                JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
+                JLabel productName = new JLabel();
+                JLabel productPrice = new JLabel();
+                JLabel productQuantity = new JLabel();
+
+                productName.setText("名稱:" + productList.get(i).getName());
+                productPrice.setText("價格: " + productList.get(i).getPrice());
+                productQuantity.setText("編號: " + productList.get(i).getProductId());
+
+                itemPanel.add(productItem);
+                itemPanel.add(productName);
+                itemPanel.add(productPrice);
+                itemPanel.add(productQuantity);
+
+                if (temp < 3) {
+                    topProductPanel.add(itemPanel);
+                }else if (temp < 6) {
+                    middleProductPanel.add(itemPanel);
+                }else if (temp < 9) {
+                    bottomProductPanel.add(itemPanel);
+                }
+
+                temp++;
             }
 
-            rowPanel.add(productItem);
-            rowPanel.add(productName);
-            rowPanel.add(productPrice);
-            rowPanel.add(productQuantity);
-
-            columnPanel.add(rowPanel);
-
-            productPanel.add(columnPanel);
-
             updateView();
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -217,7 +289,11 @@ public class VendingMachine{
         }
     }
 
-    // 更新畫面金額
+    private void updatePageSwitcher() {
+        JLabel pageLabel = machineGUI.getPageLabel();
+        pageLabel.setText(currentPage + "/"+ maxPage);
+    }
+
     public void updateAmount() {
         machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
     }
@@ -232,7 +308,7 @@ public class VendingMachine{
     }
 
     public void startView() {
-        machineGUI.setSize(1000, 500);
+        machineGUI.setSize(550, 400);
         machineGUI.setVisible(true);
     }
 }

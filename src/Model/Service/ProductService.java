@@ -27,6 +27,7 @@ public class ProductService {
 
             while (resultSet.next()) {
                 Product product = new Product();
+                product.setProductId(resultSet.getString("productId"));
                 product.setQuantity(resultSet.getInt("quantity"));
                 product.setPrice(resultSet.getInt("price"));
                 product.setName(resultSet.getString("name"));

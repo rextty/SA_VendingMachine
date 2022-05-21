@@ -2,7 +2,7 @@
 <form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="View.MachineGUI">
   <grid id="27dc6" binding="mainPanel" layout-manager="BorderLayout" hgap="0" vgap="0">
     <constraints>
-      <xy x="20" y="20" width="599" height="590"/>
+      <xy x="20" y="20" width="617" height="590"/>
     </constraints>
     <properties/>
     <border type="none"/>
@@ -10,18 +10,86 @@
       <grid id="f90a" binding="LeftPanel" layout-manager="FormLayout">
         <rowspec value="center:d:grow"/>
         <colspec value="fill:d:noGrow"/>
-        <constraints border-constraint="West"/>
+        <constraints border-constraint="Center"/>
         <properties/>
         <border type="none"/>
         <children>
-          <grid id="45ce1" binding="productPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+          <grid id="45ce1" binding="productPanel" layout-manager="BorderLayout" hgap="0" vgap="20">
             <constraints>
               <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
               <forms/>
             </constraints>
             <properties/>
             <border type="none"/>
-            <children/>
+            <children>
+              <grid id="dfe51" layout-manager="FormLayout">
+                <rowspec value="center:d:noGrow"/>
+                <rowspec value="top:4dlu:noGrow"/>
+                <rowspec value="center:max(d;4px):noGrow"/>
+                <rowspec value="top:4dlu:noGrow"/>
+                <rowspec value="center:max(d;4px):noGrow"/>
+                <colspec value="fill:d:noGrow"/>
+                <constraints border-constraint="Center"/>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <grid id="919bd" binding="topProductPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children/>
+                  </grid>
+                  <grid id="dde01" binding="middleProductPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                    <constraints>
+                      <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children/>
+                  </grid>
+                  <grid id="e5146" binding="bottomProductPanel" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                    <constraints>
+                      <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children/>
+                  </grid>
+                </children>
+              </grid>
+              <grid id="d6" layout-manager="FlowLayout" hgap="5" vgap="5" flow-align="1">
+                <constraints border-constraint="South"/>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="436d9" class="javax.swing.JButton" binding="prePageButton">
+                    <constraints/>
+                    <properties>
+                      <enabled value="false"/>
+                      <text value="PrePage"/>
+                    </properties>
+                  </component>
+                  <component id="42f28" class="javax.swing.JLabel" binding="pageLabel">
+                    <constraints/>
+                    <properties>
+                      <text value="1/1"/>
+                    </properties>
+                  </component>
+                  <component id="e1921" class="javax.swing.JButton" binding="nextPageButton" default-binding="true">
+                    <constraints/>
+                    <properties>
+                      <enabled value="true"/>
+                      <text value="NextPage"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+            </children>
           </grid>
         </children>
       </grid>
