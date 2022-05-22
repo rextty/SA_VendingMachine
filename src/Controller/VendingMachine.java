@@ -1,10 +1,15 @@
 package Controller;
 
+import Model.Entity.Message;
+import Model.Entity.MessageTypeEnum;
 import Model.Entity.Product;
+import Model.Entity.SalesRecord;
 import Model.Sensor.MoneySensor;
 import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
 import Model.Service.ProductService;
+import Model.Service.ReplenishmentService;
+import Model.Service.SalesRecordService;
 import View.MachineGUI;
 
 import javax.imageio.ImageIO;
@@ -13,19 +18,26 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class VendingMachine{
 
     private final MachineGUI machineGUI;
 
-    private final MoneySensor moneySensor;
+    private MoneySensor moneySensor;
 
-    private final ProductSensor productSensor;
+    private ProductSensor productSensor;
 
-    private final TemperatureSensor temperatureSensor;
+    private TemperatureSensor temperatureSensor;
 
     private ProductService productService;
+
+    private ReplenishmentService replenishmentService;
+
+    private SalesRecordService salesRecordService;
 
     private int currentPage;
 
@@ -35,25 +47,36 @@ public class VendingMachine{
 
     private int endPage;
 
-    public VendingMachine(
-            MachineGUI _gui,
-            MoneySensor moneySensor,
-            ProductSensor productSensor,
-            TemperatureSensor temperatureSensor
-    ) {
+    private JLabel pageLabel;
+
+    private JLabel amountLabel;
+
+    private JLabel productIdLabel;
+
+    public VendingMachine(MachineGUI _gui) {
+        //TODO: 故障提醒
+
         this.machineGUI = _gui;
-        this.moneySensor = moneySensor;
-        this.productSensor = productSensor;
-        this.temperatureSensor = temperatureSensor;
+        init();
     }
 
-    public void init() {
+    private void init() {
+        moneySensor = new MoneySensor();
+        productSensor = new ProductSensor();
+        temperatureSensor = new TemperatureSensor();
+
+        productService = new ProductService();
+        replenishmentService = new ReplenishmentService();
+        salesRecordService = new SalesRecordService();
+
+        pageLabel = machineGUI.getPageLabel();
+        amountLabel = machineGUI.getAmountLabel();
+        productIdLabel = machineGUI.getProductIdLabel();
+
         currentPage = 1;
 
         startPage = 0;
         endPage = 9;
-
-        productService = new ProductService();
 
         // 綁定投幣按鈕事件
         bingPutCoinListener();
@@ -66,6 +89,16 @@ public class VendingMachine{
 
         // 初始化商品頁面
         initProductPanel();
+    }
+
+    // 初始化商品頁面
+    private void initProductPanel() {
+        List<Product> productList = productService.getAllProduct();
+
+        maxPage = (int) Math.ceil(productList.size() / 9.0);
+        updatePageSwitcher();
+
+        updateProductPanel(startPage, endPage);
     }
 
     // 投幣事件
@@ -110,6 +143,38 @@ public class VendingMachine{
             updateAmount();
         });
 
+    }
+
+    // 商品換頁事件
+    private void bindPageSwitcherListener() {
+        machineGUI.getPrePageButton().addActionListener(e -> {
+            currentPage--;
+            updatePageSwitcher();
+
+            if (currentPage == 1)
+                machineGUI.getPrePageButton().setEnabled(false);
+
+            machineGUI.getNextPageButton().setEnabled(true);
+
+            startPage -= 9;
+            endPage -= 9;
+            updateProductPanel(startPage, endPage);
+
+        });
+
+        machineGUI.getNextPageButton().addActionListener(e -> {
+            currentPage ++;
+            updatePageSwitcher();
+
+            if (currentPage == maxPage)
+                machineGUI.getNextPageButton().setEnabled(false);
+
+            machineGUI.getPrePageButton().setEnabled(true);
+
+            startPage += 9;
+            endPage += 9;
+            updateProductPanel(startPage, endPage);
+        });
     }
 
     // 選擇商品事件
@@ -167,100 +232,128 @@ public class VendingMachine{
         machineGUI.getDeleteButton().addActionListener(e -> {
             String productId = productSensor.getProductId();
 
-            if (productId.length() == 0) {
+            if (productId.length() == 0)
                 return;
-            }
 
-            productSensor.setProductId(productId.substring(0, productId.length() - 1));
+            productSensor.deleteProductId();
             updateProductId();
         });
 
         machineGUI.getConfirmButton().addActionListener(e -> {
-            String productId = machineGUI.getProductIdLabel().getText();
-            int productPrice = productService.getProductByProductId(productId).getPrice();
+            String productId = productSensor.getProductId();
 
-            if (moneySensor.getAmount() < productPrice) {
+            if (productId == "") {
+                JOptionPane.showMessageDialog(null, "Please enter item number.");
+                return;
+            }
+
+            Product product = productService.getProductByProductId(productId);
+
+            if (product == null) {
+                JOptionPane.showMessageDialog(null, "Please enter the correct item number.");
+                return;
+            }
+
+            if (product.getQuantity() < 1) {
+                JOptionPane.showMessageDialog(null, "Item is out of stock.");
+                return;
+            }
+
+            if (moneySensor.getAmount() < product.getPrice()) {
                 JOptionPane.showMessageDialog(null, "Insufficient amount");
                 return;
             }
 
-            moneySensor.setAmount(moneySensor.getAmount() - productPrice);
-            updateAmount();
-
-            setPanelEnabled(machineGUI.getRightPanel(), false);
-            buyProduct(productId);
+            buyProduct(product);
         });
     }
 
     // 購買商品
-    private void buyProduct(String productId) {
-        int productQuantity = productService.getProductByProductId(productId).getQuantity() - 1;
-        productService.updateProductQuantityByProductId(productId, productQuantity);
-        JOptionPane.showMessageDialog(null, "Success.");
+    private void buyProduct(Product product) {
+        setPanelEnabled(machineGUI.getRightPanel(), false);
+
+        moneySensor.setAmount(moneySensor.getAmount() - product.getPrice());
+        updateAmount();
+
         productSensor.setProductId("");
-        machineGUI.getProductIdLabel().setText("");
+        updateProductId();
+
+        productSensor.replenishment();
+
+        int newProductQuantity = product.getQuantity() - 1;
+        productService.updateProductQuantityByProductId(product.getProductId(), newProductQuantity);
+
         setPanelEnabled(machineGUI.getRightPanel(), true);
+
+        String dateFormat = "yyyy-MM-dd HH:mm:ss";
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
+
+        SalesRecord salesRecord = new SalesRecord();
+        salesRecord.setProductId(product.getProductId());
+        salesRecord.setDate(simpleDateFormat.format(new java.util.Date()));
+
+        salesRecordService.addSalesRecord(salesRecord);
+
+        checkProductStock(product);
     }
 
-    // 商品換頁事件
-    private void bindPageSwitcherListener() {
-        machineGUI.getPrePageButton().addActionListener(e -> {
-            currentPage--;
-            updatePageSwitcher();
+    // 更新頁面狀態
+    private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
+        panel.setEnabled(isEnabled);
 
-            if (currentPage == 1) {
-                machineGUI.getPrePageButton().setEnabled(false);
+        Component[] components = panel.getComponents();
+
+        for (Component component : components) {
+            if (component instanceof JPanel) {
+                setPanelEnabled((JPanel) component, isEnabled);
             }
-
-            startPage -= 9;
-            endPage -= 9;
-
-            machineGUI.getNextPageButton().setEnabled(true);
-            updateProductPanel(startPage, endPage);
-        });
-
-        machineGUI.getNextPageButton().addActionListener(e -> {
-            currentPage ++;
-            updatePageSwitcher();
-
-            if (currentPage == maxPage) {
-                machineGUI.getNextPageButton().setEnabled(false);
-            }
-
-            startPage += 9;
-            endPage += 9;
-
-            machineGUI.getPrePageButton().setEnabled(true);
-            updateProductPanel(startPage, endPage);
-        });
+            component.setEnabled(isEnabled);
+        }
     }
 
-    // 初始化商品頁面
-    private void initProductPanel() {
-        List<Product> productList = productService.getAllProduct();
+    // 檢查補貨
+    private void checkProductStock(Product product) {
+        //TODO: 是否該寫入Sensor
+        int productQuantity = product.getQuantity();
 
-        maxPage = (int) Math.ceil(productList.size() / 9.0);
+        if (productQuantity < 30) {
+            //TODO: message maybe should be json type.
 
-        updatePageSwitcher();
-        updateProductPanel(startPage, endPage);
+            Message message = new Message();
+
+            message.setProductId(product.getProductId());
+
+            message.setMessage(String.format(
+                    "Product of %s quantity is less than 30.", product.getName()
+            ));
+
+            message.setMsgType(MessageTypeEnum.OUT_OF_STOCK.getValue());
+
+            if (!replenishmentService.checkExistMessageByProductIdAndMsgType(message))
+                replenishmentService.addMessage(message);
+        }
     }
 
     // 更新商品頁面
     private void updateProductPanel(int start, int end) {
         try {
+            // 判斷商品該放在哪一層, 一層只能放三個商品
             int temp = 0;
 
             JPanel topProductPanel = machineGUI.getTopProductPanel();
             JPanel middleProductPanel = machineGUI.getMiddleProductPanel();
             JPanel bottomProductPanel = machineGUI.getBottomProductPanel();
 
+            // 清除商品
             topProductPanel.removeAll();
             middleProductPanel.removeAll();
             bottomProductPanel.removeAll();
 
             List<Product> productList = productService.getAllProduct();
 
+            // 一頁放9個商品, 呼叫function所帶入的 start 跟 end 會自動計算
             for (int i = start; i <= end; i++) {
+                // 避免取超出資料庫大小的資料
                 if (i >= productList.size()) {
                     updateView();
                     return;
@@ -285,6 +378,7 @@ public class VendingMachine{
                 itemPanel.add(productPrice);
                 itemPanel.add(productQuantity);
 
+                // 每三筆資料放一層
                 if (temp < 3) {
                     topProductPanel.add(itemPanel);
                 }else if (temp < 6) {
@@ -297,40 +391,24 @@ public class VendingMachine{
             }
 
             updateView();
-
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    // 更新頁面狀態
-    private void setPanelEnabled(JPanel panel, Boolean isEnabled) {
-        panel.setEnabled(isEnabled);
-
-        Component[] components = panel.getComponents();
-
-        for (Component component : components) {
-            if (component instanceof JPanel) {
-                setPanelEnabled((JPanel) component, isEnabled);
-            }
-            component.setEnabled(isEnabled);
-        }
-    }
-
     // 更新商品頁數
     private void updatePageSwitcher() {
-        JLabel pageLabel = machineGUI.getPageLabel();
-        pageLabel.setText(currentPage + "/"+ maxPage);
+        pageLabel.setText(currentPage + "/" + maxPage);
     }
 
     // 更新投入金額
     public void updateAmount() {
-        machineGUI.getAmountLabel().setText(Integer.toString(moneySensor.getAmount()));
+        amountLabel.setText(Integer.toString(moneySensor.getAmount()));
     }
 
     // 更新選擇商品編號
     public void updateProductId() {
-        machineGUI.getProductIdLabel().setText(productSensor.getProductId());
+        productIdLabel.setText(productSensor.getProductId());
     }
 
     // 更新畫面

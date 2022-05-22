@@ -14,9 +14,7 @@ public class Product {
 
     private String image;
 
-    public Product() {
-
-    }
+    public Product() {}
 
     public void setProductId(String productId) {
         this.productId = productId;
