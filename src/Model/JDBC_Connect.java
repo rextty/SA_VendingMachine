@@ -9,7 +9,8 @@ public class JDBC_Connect {
     private Connection connection;
 
     public JDBC_Connect() {
-        String url = "jdbc:mysql://localhost:3306/Vending_Machine";
+        //TODO: 這裡有做修改
+        String url = "jdbc:mysql://localhost:3306/Vending_Machine?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=CONVERT_TO_NULL&serverTimezone=UTC";
         String username = "root";
         String password = "pA22w0r78877";
 

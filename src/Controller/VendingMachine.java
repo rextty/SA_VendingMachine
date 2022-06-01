@@ -19,8 +19,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class VendingMachine{
@@ -55,6 +53,9 @@ public class VendingMachine{
 
     public VendingMachine(MachineGUI _gui) {
         //TODO: 故障提醒
+        //TODO: 確認MVC開發模式
+        //TODO: 圖片問題
+        //TODO: 悠遊卡
 
         this.machineGUI = _gui;
         init();
@@ -242,7 +243,7 @@ public class VendingMachine{
         machineGUI.getConfirmButton().addActionListener(e -> {
             String productId = productSensor.getProductId();
 
-            if (productId == "") {
+            if (productId.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Please enter item number.");
                 return;
             }

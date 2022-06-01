@@ -1,6 +1,5 @@
 package Model.Service;
 
-import Model.Entity.Message;
 import Model.Entity.SalesRecord;
 import Model.JDBC_Connect;
 
