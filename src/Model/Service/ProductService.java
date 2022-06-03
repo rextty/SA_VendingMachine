@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO:功能內聚
 public class ProductService {
 
     private final JDBC_Connect jdbc_connect;

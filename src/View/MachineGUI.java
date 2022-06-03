@@ -35,6 +35,7 @@ public class MachineGUI extends JFrame {
     private JButton prePageButton;
     private JButton nextPageButton;
     private JLabel pageLabel;
+    private JButton scanQRCodeButton;
 
     public MachineGUI(String title) {
         super(title);
@@ -164,5 +165,9 @@ public class MachineGUI extends JFrame {
 
     public JButton getNextPageButton() {
         return nextPageButton;
+    }
+
+    public JButton getScanQRCodeButton() {
+        return scanQRCodeButton;
     }
 }

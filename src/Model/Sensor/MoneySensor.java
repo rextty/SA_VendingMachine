@@ -1,5 +1,6 @@
 package Model.Sensor;
 
+//TODO: 功能內聚
 public class MoneySensor {
 
     private int amount;
@@ -30,6 +31,5 @@ public class MoneySensor {
     public boolean getError() {
         return isError;
     }
-
 
 }

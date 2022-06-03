@@ -90,6 +90,33 @@ public class VendingMachine{
 
         // 初始化商品頁面
         initProductPanel();
+
+        // 初始化 QR Code 掃描
+        initScanner();
+    }
+
+    // 初始化 QR Code 掃描
+    private void initScanner() {
+        machineGUI.getScanQRCodeButton().addActionListener(e -> {
+            receiveQR();
+        });
+    }
+
+    // 掃描 QR Code
+    private void receiveQR() {
+
+    }
+
+    private void accessQR() {
+
+    }
+
+    private void getPreOrderByQRCode() {
+
+    }
+
+    private void deliverProduct() {
+        productSensor.replenishment();
     }
 
     // 初始化商品頁面
@@ -279,7 +306,7 @@ public class VendingMachine{
         productSensor.setProductId("");
         updateProductId();
 
-        productSensor.replenishment();
+        deliverProduct();
 
         int newProductQuantity = product.getQuantity() - 1;
         productService.updateProductQuantityByProductId(product.getProductId(), newProductQuantity);
