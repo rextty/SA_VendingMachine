@@ -1,24 +1,36 @@
 package Controller;
 
-import Model.Entity.Message;
-import Model.Entity.MessageTypeEnum;
-import Model.Entity.Product;
-import Model.Entity.SalesRecord;
+import Model.Entity.*;
+import Model.JDBC_Connect;
 import Model.Sensor.MoneySensor;
 import Model.Sensor.ProductSensor;
 import Model.Sensor.TemperatureSensor;
+import Model.Service.PreOrderService;
 import Model.Service.ProductService;
 import Model.Service.ReplenishmentService;
 import Model.Service.SalesRecordService;
 import View.MachineGUI;
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamPanel;
+import com.github.sarxos.webcam.WebcamResolution;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
+import org.opencv.objdetect.QRCodeDetector;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import java.awt.image.DataBufferByte;
+import java.io.*;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 public class VendingMachine{
@@ -26,39 +38,37 @@ public class VendingMachine{
     private final MachineGUI machineGUI;
 
     private MoneySensor moneySensor;
-
     private ProductSensor productSensor;
-
     private TemperatureSensor temperatureSensor;
 
     private ProductService productService;
-
     private ReplenishmentService replenishmentService;
-
     private SalesRecordService salesRecordService;
+    private PreOrderService preOrderService;
 
     private int currentPage;
-
     private int maxPage;
-
     private int startPage;
-
     private int endPage;
 
     private JLabel pageLabel;
-
     private JLabel amountLabel;
-
     private JLabel productIdLabel;
+
+    private Webcam webcam;
+
+    // opencv
+    static {
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+    }
 
     public VendingMachine(MachineGUI _gui) {
         //TODO: 故障提醒
-        //TODO: 確認MVC開發模式
-        //TODO: 圖片問題
-        //TODO: 悠遊卡
+        // TODO: 悠遊卡
 
         this.machineGUI = _gui;
         init();
+//        saveImgToDB();
     }
 
     private void init() {
@@ -69,6 +79,7 @@ public class VendingMachine{
         productService = new ProductService();
         replenishmentService = new ReplenishmentService();
         salesRecordService = new SalesRecordService();
+        preOrderService = new PreOrderService();
 
         pageLabel = machineGUI.getPageLabel();
         amountLabel = machineGUI.getAmountLabel();
@@ -97,22 +108,111 @@ public class VendingMachine{
 
     // 初始化 QR Code 掃描
     private void initScanner() {
-        machineGUI.getScanQRCodeButton().addActionListener(e -> {
-            receiveQR();
-        });
+        JTabbedPane cameraTabbedPane = machineGUI.getCameraTabbedPane();
+        JPanel jPanelCamera = new JPanel();
+
+        Dimension camSize = new Dimension(100, 100);
+        Dimension panelSize = new Dimension(150, 150);
+        cameraTabbedPane.setPreferredSize(panelSize);
+
+        cameraTabbedPane.remove(0);
+        cameraTabbedPane.addTab("Scanner", jPanelCamera);
+
+        webcam = Webcam.getDefault();
+        webcam.setViewSize(WebcamResolution.VGA.getSize());
+
+        WebcamPanel webcamPanel = new WebcamPanel(webcam);
+        webcamPanel.setPreferredSize(camSize);
+//        webcamPanel.setFPSDisplayed(true);
+//        webcamPanel.setDisplayDebugInfo(true);
+//        webcamPanel.setImageSizeDisplayed(true);
+//        webcamPanel.setMirrored(true);
+
+        jPanelCamera.add(webcamPanel);
+        jPanelCamera.getParent().revalidate();
+
+        new Thread(receiveQRCode).start();
     }
 
-    // 掃描 QR Code
-    private void receiveQR() {
+    // 接收QRCode
+    private Runnable receiveQRCode = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(3000);
 
+                while (true) {
+                    BufferedImage snapShot = webcam.getImage();
+
+                    String qrCode = readQRCode(snapShot);
+
+                    if (qrCode != null) {
+                        getOrderInfo(Integer.parseInt(qrCode));
+                    }
+
+                    Thread.sleep(1000);
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+
+    private void getOrderInfo(int qrCode){
+        PreOrder preOrder = preOrderService.getPreOrder(qrCode);
+        String dateTime = preOrder.getExpireDate();
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String currentTime = dtf.format(LocalDateTime.now());
+
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date1 = null;
+        Date date2 = null;
+        try {
+            date1 = format.parse(currentTime);
+            date2 = format.parse(dateTime);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        assert date1 != null;
+        assert date2 != null;
+
+        long difference = date2.getTime() - date1.getTime();
+
+        if (difference > 0) {
+            showMsg("Product have been shipped.");
+            preOrder.setTake(true);
+            preOrderService.updatePreOrder(preOrder);
+        }else {
+            showMsg("QRCode is expired.");
+        }
     }
 
-    private void accessQR() {
+    private void pickUpPreOrder(int  qrCode) {
+        PreOrder preOrder = preOrderService.getPreOrder(qrCode);
 
+        // 判斷取貨時間...
     }
 
-    private void getPreOrderByQRCode() {
+    private String readQRCode(BufferedImage bufferedImage) {
+        Mat img = bufferedImageToMat(bufferedImage);
+        QRCodeDetector detector = new QRCodeDetector();
+        Mat points = new Mat();
+        Mat straight_qrcode = new Mat();
 
+        String data = detector.detectAndDecode(img, points, straight_qrcode);
+
+        if (data.length() > 0) {
+            return data;
+        }
+        return null;
+    }
+
+    public static Mat bufferedImageToMat(BufferedImage bufferedImage) {
+        Mat mat = new Mat(bufferedImage.getHeight(), bufferedImage.getWidth(), CvType.CV_8UC3);
+        byte[] data = ((DataBufferByte) bufferedImage.getRaster().getDataBuffer()).getData();
+        mat.put(0, 0, data);
+        return mat;
     }
 
     private void deliverProduct() {
@@ -271,24 +371,24 @@ public class VendingMachine{
             String productId = productSensor.getProductId();
 
             if (productId.isEmpty()) {
-                JOptionPane.showMessageDialog(null, "Please enter item number.");
+                showMsg("Please enter item number.");
                 return;
             }
 
-            Product product = productService.getProductByProductId(productId);
+            Product product = productService.getProductById(Integer.parseInt(productId));
 
             if (product == null) {
-                JOptionPane.showMessageDialog(null, "Please enter the correct item number.");
+                showMsg("Please enter the correct item number.");
                 return;
             }
 
             if (product.getQuantity() < 1) {
-                JOptionPane.showMessageDialog(null, "Item is out of stock.");
+                showMsg("Item is out of stock.");
                 return;
             }
 
             if (moneySensor.getAmount() < product.getPrice()) {
-                JOptionPane.showMessageDialog(null, "Insufficient amount");
+                showMsg("Insufficient amount");
                 return;
             }
 
@@ -309,7 +409,7 @@ public class VendingMachine{
         deliverProduct();
 
         int newProductQuantity = product.getQuantity() - 1;
-        productService.updateProductQuantityByProductId(product.getProductId(), newProductQuantity);
+        productService.updateProductQuantityBytId(product.getId(), newProductQuantity);
 
         setPanelEnabled(machineGUI.getRightPanel(), true);
 
@@ -317,7 +417,7 @@ public class VendingMachine{
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(dateFormat);
 
         SalesRecord salesRecord = new SalesRecord();
-        salesRecord.setProductId(product.getProductId());
+        salesRecord.setProductId(product.getId());
         salesRecord.setDate(simpleDateFormat.format(new java.util.Date()));
 
         salesRecordService.addSalesRecord(salesRecord);
@@ -349,15 +449,13 @@ public class VendingMachine{
 
             Message message = new Message();
 
-            message.setProductId(product.getProductId());
-
             message.setMessage(String.format(
                     "Product of %s quantity is less than 30.", product.getName()
             ));
 
             message.setMsgType(MessageTypeEnum.OUT_OF_STOCK.getValue());
 
-            if (!replenishmentService.checkExistMessageByProductIdAndMsgType(message))
+            if (!replenishmentService.checkExistMessageByMsgAndMsgType(message))
                 replenishmentService.addMessage(message);
         }
     }
@@ -390,16 +488,15 @@ public class VendingMachine{
                 JPanel itemPanel = new JPanel();
                 itemPanel.setLayout(new BoxLayout(itemPanel, BoxLayout.Y_AXIS));
 
-                BufferedImage bufferedImage = ImageIO.read(new File("C:\\Users\\ian98\\IdeaProjects\\SA_VendingMachine\\Resource\\DiscordIcon.png"));
-
-                JLabel productItem = new JLabel(new ImageIcon(bufferedImage));
+                JLabel productItem = new JLabel();
                 JLabel productName = new JLabel();
                 JLabel productPrice = new JLabel();
                 JLabel productQuantity = new JLabel();
 
-                productName.setText("名稱:" + productList.get(i).getName());
-                productPrice.setText("價格: " + productList.get(i).getPrice());
-                productQuantity.setText("編號: " + productList.get(i).getProductId());
+                productItem.setIcon(new ImageIcon(ImageIO.read(productList.get(i).getImage().getBinaryStream())));
+                productName.setText(productList.get(i).getName());
+                productPrice.setText("$ " + productList.get(i).getPrice() + " NTD");
+                productQuantity.setText("Number: " + productList.get(i).getId());
 
                 itemPanel.add(productItem);
                 itemPanel.add(productName);
@@ -419,8 +516,43 @@ public class VendingMachine{
             }
 
             updateView();
-        } catch (IOException e) {
+        } catch (IOException | SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void saveImgToDB() {
+        String base = "C:\\Users\\ian98\\OneDrive\\圖片\\sa\\";
+        String[] imgs = {
+                "",
+                "",
+                "3050268.png",
+                "287062.png",
+                "3081162.png",
+                "food-32-512.png",
+                "5303997.png",
+                "3054889.png",
+                "2258281.png",
+                "18-512.png",
+                "603884.png",
+                "2619512.png",
+                "3075627.png",
+        };
+        for (int i = 2; i <= 12; i++) {
+            JDBC_Connect jdbc_connect = new JDBC_Connect();
+            String file = base + imgs[i];
+            String sql = String.format(
+                    "UPDATE vending_machine.product SET image=(?) WHERE id = %d;", i
+            );
+
+            try {
+                InputStream in = new FileInputStream(file);
+                PreparedStatement ps = jdbc_connect.getConnection().prepareStatement(sql);
+                ps.setBinaryStream(1, in);
+                ps.executeUpdate();
+            } catch (FileNotFoundException | SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -439,6 +571,10 @@ public class VendingMachine{
         productIdLabel.setText(productSensor.getProductId());
     }
 
+    private void showMsg(String msg) {
+        JOptionPane.showMessageDialog(null, msg);
+    }
+
     // 更新畫面
     public void updateView() {
         machineGUI.validate();
@@ -447,7 +583,7 @@ public class VendingMachine{
 
     // 顯示販賣機畫面
     public void startView() {
-        machineGUI.setSize(550, 400);
+        machineGUI.setSize(550, 540);
         machineGUI.setVisible(true);
     }
 }

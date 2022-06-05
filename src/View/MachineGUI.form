@@ -101,10 +101,8 @@
         <rowspec value="center:max(d;4px):noGrow"/>
         <rowspec value="top:4dlu:noGrow"/>
         <rowspec value="top:4dlu:noGrow"/>
-        <rowspec value="center:d:grow"/>
-        <rowspec value="top:4dlu:noGrow"/>
         <rowspec value="center:max(d;4px):noGrow"/>
-        <rowspec value="center:d:grow"/>
+        <rowspec value="top:4dlu:noGrow"/>
         <colspec value="fill:d:noGrow"/>
         <constraints border-constraint="East"/>
         <properties/>
@@ -452,15 +450,30 @@
               <forms defaultalign-horz="false" defaultalign-vert="false"/>
             </constraints>
           </vspacer>
-          <component id="f694b" class="javax.swing.JButton" binding="scanQRCodeButton" default-binding="true">
+          <tabbedpane id="4a8ad" binding="cameraTabbedPane">
             <constraints>
-              <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                <preferred-size width="200" height="200"/>
+              </grid>
               <forms/>
             </constraints>
             <properties>
-              <text value="Scan QR Code"/>
+              <enabled value="true"/>
+              <toolTipText value=""/>
             </properties>
-          </component>
+            <border type="none"/>
+            <children>
+              <grid id="4286d" layout-manager="GridLayoutManager" row-count="1" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <tabbedpane title="Untitled"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children/>
+              </grid>
+            </children>
+          </tabbedpane>
         </children>
       </grid>
     </children>

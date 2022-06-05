@@ -4,6 +4,7 @@ package Model.Service;
 import Model.Entity.Product;
 import Model.JDBC_Connect;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,26 +14,28 @@ import java.util.List;
 public class ProductService {
 
     private final JDBC_Connect jdbc_connect;
+    private final Connection connection;
 
     public ProductService() {
         jdbc_connect = new JDBC_Connect();
+        connection = jdbc_connect.getConnection();
     }
 
     public List<Product> getAllProduct() {
         String query = "SELECT * FROM vending_machine.product;";
 
         try {
-            ResultSet resultSet = jdbc_connect.getConnection().createStatement().executeQuery(query);
+            ResultSet resultSet = connection.createStatement().executeQuery(query);
 
             List<Product> productList = new ArrayList<>();
 
             while (resultSet.next()) {
                 Product product = new Product();
-                product.setProductId(resultSet.getString("productId"));
+                product.setId(resultSet.getInt("id"));
                 product.setQuantity(resultSet.getInt("quantity"));
                 product.setPrice(resultSet.getInt("price"));
                 product.setName(resultSet.getString("name"));
-                product.setImage(resultSet.getString("image"));
+                product.setImage(resultSet.getBlob("image"));
 
                 productList.add(product);
             }
@@ -43,20 +46,20 @@ public class ProductService {
         }
     }
 
-    public Product getProductByProductId(String productId) {
-        String query = "SELECT * FROM vending_machine.product WHERE `productId` = " + productId + ";";
+    public Product getProductById(int id) {
+        String query = "SELECT * FROM vending_machine.product WHERE `id` = " + id + ";";
 
         try {
-            ResultSet resultSet = jdbc_connect.getConnection().createStatement().executeQuery(query);
+            ResultSet resultSet = connection.createStatement().executeQuery(query);
 
             Product product = new Product();
 
             if (resultSet.next()) {
-                product.setProductId(resultSet.getString("productId"));
+                product.setId(resultSet.getInt("id"));
                 product.setQuantity(resultSet.getInt("quantity"));
                 product.setPrice(resultSet.getInt("price"));
                 product.setName(resultSet.getString("name"));
-                product.setImage(resultSet.getString("image"));
+                product.setImage(resultSet.getBlob("image"));
                 return product;
             }
 
@@ -69,28 +72,27 @@ public class ProductService {
     public void updateProductByProduct(Product product) {
         String query = String.format(
                 "UPDATE vending_machine.product " +
-                        "SET productId = %s " +
                         "quantity = %s " +
                         "price = %s " +
                         "name = %s " +
                         "image = %s " +
-                        "WHERE productId = %s;", product.getProductId(), product.getQuantity(), product.getPrice(), product.getName(), product.getImage(), product.getProductId());
+                        "WHERE id = %d;", product.getQuantity(), product.getPrice(), product.getName(), product.getImage(), product.getId());
 
         try {
-            jdbc_connect.getConnection().createStatement().executeUpdate(query);
+            connection.createStatement().executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void updateProductQuantityByProductId(String productId, int quantity) {
+    public void updateProductQuantityBytId(int id, int quantity) {
         String query = String.format(
                 "UPDATE vending_machine.product " +
                         "SET quantity = %s " +
-                        "WHERE productId = %s;", quantity, productId);
+                        "WHERE id = %d;", quantity, id);
 
         try {
-            jdbc_connect.getConnection().createStatement().executeUpdate(query);
+            connection.createStatement().executeUpdate(query);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

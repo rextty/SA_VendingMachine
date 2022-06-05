@@ -35,12 +35,10 @@ public class MachineGUI extends JFrame {
     private JButton prePageButton;
     private JButton nextPageButton;
     private JLabel pageLabel;
-    private JButton scanQRCodeButton;
+    private JTabbedPane cameraTabbedPane;
 
     public MachineGUI(String title) {
         super(title);
-
-        //TODO: 商品頁面切九宮格
 
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setContentPane(mainPanel);
@@ -167,7 +165,7 @@ public class MachineGUI extends JFrame {
         return nextPageButton;
     }
 
-    public JButton getScanQRCodeButton() {
-        return scanQRCodeButton;
+    public JTabbedPane getCameraTabbedPane() {
+        return cameraTabbedPane;
     }
 }

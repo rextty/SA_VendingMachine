@@ -1,10 +1,10 @@
 package Model.Entity;
 
+import java.sql.Blob;
+
 public class Product {
 
     private int id;
-
-    private String productId;
 
     private int quantity;
 
@@ -12,12 +12,12 @@ public class Product {
 
     private String name;
 
-    private String image;
+    private Blob image;
 
     public Product() {}
 
-    public void setProductId(String productId) {
-        this.productId = productId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public void setQuantity(int quantity) {
@@ -32,7 +32,8 @@ public class Product {
         this.name = name;
     }
 
-    public void setImage(String image) {
+
+    public void setImage(Blob image) {
         this.image = image;
     }
 
@@ -48,11 +49,12 @@ public class Product {
         return name;
     }
 
-    public String getImage() {
+
+    public Blob getImage() {
         return image;
     }
 
-    public String getProductId() {
-        return productId;
+    public int getId() {
+        return id;
     }
 }

@@ -2,7 +2,7 @@ package Model.Entity;
 
 public class Message {
 
-    private String productId;
+    private int id;
 
     private String message;
 
@@ -14,6 +14,10 @@ public class Message {
         isNotify = false;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public void setMessage(String message) {
         this.message = message;
     }
@@ -22,16 +26,12 @@ public class Message {
         this.isNotify = isNotify;
     }
 
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
     public void setMsgType(int msgType) {
         this.msgType = msgType;
     }
 
-    public String getProductId() {
-        return productId;
+    public int getId() {
+        return id;
     }
 
     public int getMsgType() {
